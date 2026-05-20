@@ -1,0 +1,56 @@
+flowchart TD
+    Start([Start]) --> DBConfig[Read test configuration from database<br/>frequency, amplitude, tolerance, pin mapping]
+
+    DBConfig --> SelectDevice[User selects device type<br/>Transformer or Inductor]
+
+    SelectDevice --> ConnectLCR[Connect LCR Meter<br/>Scientific SM6023 via LXI/Ethernet]
+
+    ConnectLCR --> ConfigLCR[Configure LCR Meter<br/>:MEASure:FUNCtion INDUCTance<br/>amplitude 1V, frequency 100KHz<br/>timeout 60s]
+
+    ConfigLCR --> CheckDevice{Device Type?}
+
+    CheckDevice -->|Transformer| TransformerFlow
+    CheckDevice -->|Inductor| InductorFlow
+
+    subgraph TransformerFlow [Transformer Measurement]
+        T1[Short primary terminals PH1-PL1<br/>Pin 1-2]
+        T1 --> T2[Measure inductance<br/>at PH1-PL1 Pin 1-2]
+        T2 --> T3{Pass/Fail?}
+        T3 -->|Min ≤ value ≤ Max| T3Pass[Pass]
+        T3 -->|Outside range| T3Fail[Fail]
+        T3Pass --> T4[Unshort primary terminals]
+        T3Fail --> T4
+        T4 --> T4Loop{All secondary<br/>windings measured?}
+        T4Loop -->|No| T5[Connect probes to<br/>next secondary SHx-SLx<br/>Pins 3-14]
+        T5 --> T6[Measure inductance<br/>at SHx-SLx]
+        T6 --> T7{Pass/Fail?}
+        T7 -->|Min ≤ value ≤ Max| T7Pass[Pass]
+        T7 -->|Outside range| T7Fail[Fail]
+        T7Pass --> T4Loop
+        T7Fail --> T4Loop
+        T4Loop -->|Yes| StoreT[Store all results in database]
+    end
+
+    subgraph InductorFlow [Inductor Measurement]
+        I1[Connect probes to<br/>next winding Wx]
+        I1 --> I2[Measure inductance<br/>at Wx]
+        I2 --> I3{Pass/Fail?}
+        I3 -->|Min ≤ value ≤ Max| I3Pass[Pass]
+        I3 -->|Outside range| I3Fail[Fail]
+        I3Pass --> I4
+        I3Fail --> I4
+        I4{All windings W1-W8<br/>measured?}
+        I4 -->|No| I5[Connect probes to<br/>next winding]
+        I5 --> I2
+        I4 -->|Yes| StoreI[Store all results in database]
+    end
+
+    StoreT --> LogT[Update action log<br/>with measurement results]
+    StoreI --> LogI[Update action log<br/>with measurement results]
+    LogT --> CloseLCR[Close LCR Meter connection]
+    LogI --> CloseLCR
+    CloseLCR --> End([End])
+
+    style Start fill:#90EE90,stroke:#006400
+    style End fill:#FFB6C1,stroke:#8B0000
+    style CheckDevice fill:#FFD700,stroke:#B8860B
