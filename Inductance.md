@@ -1,58 +1,55 @@
-```mermaid
 flowchart TD
-    Start([Start]) --> DBConfig["Read test configuration from database<br/>frequency, amplitude, tolerance, pin mapping"]
+    Start([Start]) --> A["Read test configuration from database"]
 
-    DBConfig --> SelectDevice["User selects device type<br/>Transformer or Inductor"]
+    A --> B["User selects device type\nTransformer or Inductor"]
 
-    SelectDevice --> ConnectLCR["Connect LCR Meter<br/>Scientific SM6023 via LXI/Ethernet"]
+    B --> C["Connect LCR Meter\nScientific SM6023 via LXI/Ethernet"]
 
-    ConnectLCR --> ConfigLCR["Configure LCR Meter<br/>:MEASure:FUNCtion INDUCTance<br/>amplitude 1V, frequency 100KHz<br/>timeout 60s"]
+    C --> D["Configure LCR Meter\n:MEASure:FUNCtion INDUCTance\namplitude 1V, frequency 100KHz"]
 
-    ConfigLCR --> CheckDevice{Device Type?}
+    D --> E{Device Type?}
 
-    CheckDevice -->|Transformer| T1
-    CheckDevice -->|Inductor| I1
+    E -->|Transformer| F["Short primary terminals PH1-PL1\nPin 1-2"]
+    E -->|Inductor| G["Connect probes to\nnext winding"]
 
-    subgraph TransformerFlow ["Transformer Measurement"]
-        T1["Short primary terminals PH1-PL1<br/>Pin 1-2"]
-        T1 --> T2["Measure inductance<br/>at PH1-PL1 Pin 1-2"]
-        T2 --> T3{Pass/Fail?}
-        T3 -->|"Min <= value <= Max"| T3Pass[Pass]
-        T3 -->|"Outside range"| T3Fail[Fail]
-        T3Pass --> T4["Unshort primary terminals"]
-        T3Fail --> T4
-        T4 --> T4Loop{"All secondary<br/>windings measured?"}
-        T4Loop -->|"No"| T5["Connect probes to<br/>next secondary SHx-SLx<br/>Pins 3-14"]
-        T5 --> T6["Measure inductance<br/>at SHx-SLx"]
-        T6 --> T7{Pass/Fail?}
-        T7 -->|"Min <= value <= Max"| T7Pass[Pass]
-        T7 -->|"Outside range"| T7Fail[Fail]
-        T7Pass --> T4Loop
-        T7Fail --> T4Loop
-        T4Loop -->|"Yes"| StoreT["Store all results in database"]
+    subgraph TFlow [Transformer Measurement]
+        F
+        F --> H["Measure inductance\nat PH1-PL1 Pin 1-2"]
+        H --> I{Pass/Fail?}
+        I -->|Within range| J["Pass"]
+        I -->|Outside range| K["Fail"]
+        J --> L["Unshort primary terminals"]
+        K --> L
+        L --> M{"All secondary\nwindings measured?"}
+        M -->|No| N["Connect probes to\nnext secondary SHx-SLx"]
+        N --> O["Measure inductance\nat SHx-SLx"]
+        O --> P{Pass/Fail?}
+        P -->|Within range| Q["Pass"]
+        P -->|Outside range| R["Fail"]
+        Q --> M
+        R --> M
+        M -->|Yes| S["Store all results in database"]
     end
 
-    subgraph InductorFlow ["Inductor Measurement"]
-        I1["Connect probes to<br/>next winding Wx"]
-        I1 --> I2["Measure inductance<br/>at Wx"]
-        I2 --> I3{Pass/Fail?}
-        I3 -->|"Min <= value <= Max"| I3Pass[Pass]
-        I3 -->|"Outside range"| I3Fail[Fail]
-        I3Pass --> I4{"All windings W1-W8<br/>measured?"}
-        I3Fail --> I4
-        I4 -->|"No"| I5["Connect probes to<br/>next winding"]
-        I5 --> I2
-        I4 -->|"Yes"| StoreI["Store all results in database"]
+    subgraph IFlow [Inductor Measurement]
+        G
+        G --> T["Measure inductance\nat Wx"]
+        T --> U{Pass/Fail?}
+        U -->|Within range| V["Pass"]
+        U -->|Outside range| W["Fail"]
+        V --> X{"All windings W1-W8\nmeasured?"}
+        W --> X
+        X -->|No| Y["Connect probes to\nnext winding"]
+        Y --> T
+        X -->|Yes| Z["Store all results in database"]
     end
 
-    StoreT --> LogT["Update action log<br/>with measurement results"]
-    StoreI --> LogI["Update action log<br/>with measurement results"]
-    LogT --> CloseLCR[Close LCR Meter connection]
-    LogI --> CloseLCR
-    CloseLCR --> End([End])
+    S --> AA["Update action log"]
+    Z --> AB["Update action log"]
+    AA --> AC["Close LCR Meter connection"]
+    AB --> AC
+    AC --> End([End])
 
     style Start fill:#90EE90,stroke:#006400
     style End fill:#FFB6C1,stroke:#8B0000
-    style CheckDevice fill:#FFD700,stroke:#B8860B
-
-```
+    style E fill:#FFD700,stroke:#B8860B
