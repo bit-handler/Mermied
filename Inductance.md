@@ -10,40 +10,39 @@ flowchart TD
 
     ConfigLCR --> CheckDevice{Device Type?}
 
-    CheckDevice -->|Transformer| TransformerFlow
-    CheckDevice -->|Inductor| InductorFlow
+    CheckDevice -->|Transformer| T1
+    CheckDevice -->|Inductor| I1
 
-    subgraph TransformerFlow [Transformer Measurement]
+    subgraph TransformerFlow ["Transformer Measurement"]
         T1["Short primary terminals PH1-PL1<br/>Pin 1-2"]
         T1 --> T2["Measure inductance<br/>at PH1-PL1 Pin 1-2"]
         T2 --> T3{Pass/Fail?}
-        T3 -->|"Min ≤ value ≤ Max"| T3Pass[Pass]
-        T3 -->|Outside range| T3Fail[Fail]
-        T3Pass --> T4[Unshort primary terminals]
+        T3 -->|"Min <= value <= Max"| T3Pass[Pass]
+        T3 -->|"Outside range"| T3Fail[Fail]
+        T3Pass --> T4["Unshort primary terminals"]
         T3Fail --> T4
         T4 --> T4Loop{"All secondary<br/>windings measured?"}
-        T4Loop -->|No| T5["Connect probes to<br/>next secondary SHx-SLx<br/>Pins 3-14"]
+        T4Loop -->|"No"| T5["Connect probes to<br/>next secondary SHx-SLx<br/>Pins 3-14"]
         T5 --> T6["Measure inductance<br/>at SHx-SLx"]
         T6 --> T7{Pass/Fail?}
-        T7 -->|"Min ≤ value ≤ Max"| T7Pass[Pass]
-        T7 -->|Outside range| T7Fail[Fail]
+        T7 -->|"Min <= value <= Max"| T7Pass[Pass]
+        T7 -->|"Outside range"| T7Fail[Fail]
         T7Pass --> T4Loop
         T7Fail --> T4Loop
-        T4Loop -->|Yes| StoreT[Store all results in database]
+        T4Loop -->|"Yes"| StoreT["Store all results in database"]
     end
 
-    subgraph InductorFlow [Inductor Measurement]
+    subgraph InductorFlow ["Inductor Measurement"]
         I1["Connect probes to<br/>next winding Wx"]
         I1 --> I2["Measure inductance<br/>at Wx"]
         I2 --> I3{Pass/Fail?}
-        I3 -->|"Min ≤ value ≤ Max"| I3Pass[Pass]
-        I3 -->|Outside range| I3Fail[Fail]
-        I3Pass --> I4
+        I3 -->|"Min <= value <= Max"| I3Pass[Pass]
+        I3 -->|"Outside range"| I3Fail[Fail]
+        I3Pass --> I4{"All windings W1-W8<br/>measured?"}
         I3Fail --> I4
-        I4{"All windings W1-W8<br/>measured?"}
-        I4 -->|No| I5[Connect probes to<br/>next winding]
+        I4 -->|"No"| I5["Connect probes to<br/>next winding"]
         I5 --> I2
-        I4 -->|Yes| StoreI[Store all results in database]
+        I4 -->|"Yes"| StoreI["Store all results in database"]
     end
 
     StoreT --> LogT["Update action log<br/>with measurement results"]
@@ -55,4 +54,5 @@ flowchart TD
     style Start fill:#90EE90,stroke:#006400
     style End fill:#FFB6C1,stroke:#8B0000
     style CheckDevice fill:#FFD700,stroke:#B8860B
+
 ```
