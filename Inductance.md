@@ -1,3 +1,4 @@
+```mermaid
 flowchart TD
     Start([Start]) --> A["Read test configuration from database"]
 
@@ -53,3 +54,4 @@ flowchart TD
     style Start fill:#90EE90,stroke:#006400
     style End fill:#FFB6C1,stroke:#8B0000
     style E fill:#FFD700,stroke:#B8860B
+```
